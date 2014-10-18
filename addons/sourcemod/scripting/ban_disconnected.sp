@@ -4,7 +4,7 @@
 
 
 #define STORED_ENTRIES 100
-#define PLUGIN_VERSION "1.04"
+#define PLUGIN_VERSION "1.05"
 
 public Plugin:myinfo = {
 	name        = "Ban disconnected players",
@@ -37,7 +37,15 @@ public OnPluginStart() {
 public Action:OnEventPlayerDisconnect(Handle:event, const String:name[], bool:dont_broadcast) {
 	decl String:steam_id[32];
 	GetEventString(event, "networkid", steam_id, sizeof(steam_id));
-
+	
+	// Handle "player_disconnect" using new steam id 
+	if (strncmp(steam_id, "[U:1:", 5) == 0)
+	{
+		new m_unAccountID = StringToInt(steam_id[5]);
+		new m_unMod = m_unAccountID % 2;
+		Format(steam_id, sizeof(steam_id), "STEAM_0:%d:%d", m_unMod, (m_unAccountID-m_unMod)/2);
+	}
+		
 	// Ignore if authid does not start with STEAM_ (possibly bot), or is identical to the last
 	// disconnected steam id, but only if it occured at the same second (duplicate event)
 	// Note: We can't resolve the client index from the event's userid and check IsFakeClient(),
